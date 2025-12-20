@@ -336,17 +336,21 @@
             border-radius: 10px;
         }
 
-        /* 更新：移除了 arrow-icon, row-connector 相關樣式 
-           更新：調整 .level-map-container 為 Grid 佈局
-        */
-        .level-map-container { 
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 20px;
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            justify-items: center;
+        .level-map-container { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 20px 0; }
+        .level-row { display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .level-row.reverse { flex-direction: row-reverse; }
+        .level-wrapper { display: flex; align-items: center; position: relative; }
+        
+        .map-avatar {
+            position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+            width: 60px; height: 60px; z-index: 10;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+            animation: float 2s infinite ease-in-out;
+            background: white; border-radius: 50%; padding: 2px;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
         }
 
         .level-btn {
@@ -373,29 +377,43 @@
         .level-btn:disabled { background-color: #ecf0f1; border-color: #bdc3c7; color: #bdc3c7; cursor: not-allowed; box-shadow: none; }
         .level-score { font-size: 0.8em; color: var(--correct-color); font-weight: bold; }
 
+        .arrow-icon {
+            font-size: 2em; color: var(--secondary-color); margin: 0 5px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.1); 
+            z-index: 1; display: block;
+        }
+        .arrow-right { animation: pulseRight 2s infinite; }
+        .arrow-left { animation: pulseLeft 2s infinite; transform: scaleX(-1); }
+        .arrow-down { animation: pulseDown 2s infinite; font-size: 2.5em; line-height: 0.5; margin: -5px 0; }
+        
+        @keyframes pulseRight { 0%, 100% { transform: translateX(0); opacity: 0.6; } 50% { transform: translateX(5px); opacity: 1; } }
+        @keyframes pulseLeft { 0%, 100% { transform: translateX(0) scaleX(-1); opacity: 0.6; } 50% { transform: translateX(-5px) scaleX(-1); opacity: 1; } }
+        @keyframes pulseDown { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(5px); opacity: 1; } }
+
+        .row-connector {
+            width: 100%; display: flex; height: 40px; align-items: center;
+            justify-content: flex-end; padding-right: 45px; box-sizing: border-box;
+        }
+        .row-connector.left { justify-content: flex-start; padding-left: 45px; padding-right: 0; }
+
         /* --- Quick Quiz (Brush Mode) Styles --- */
         .quick-level-grid {
-            /* Modified to single item center if needed, but grid works for 1 item too */
-            display: flex;
-            justify-content: center;
-            padding: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
         }
         
         .quick-level-btn {
             background: #fff;
             border: 2px solid var(--quick-mode-color);
             color: var(--quick-mode-color);
-            padding: 20px 30px; /* Bigger button */
-            border-radius: 30px;
+            padding: 15px 5px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: bold;
             transition: 0.3s;
             box-shadow: 0 4px 0 #dedede;
             text-align: center;
-            font-size: 1.3em;
-            width: 100%;
-            max-width: 400px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .quick-level-btn:hover {
             background: var(--quick-mode-color);
@@ -415,8 +433,8 @@
         .sticky-score-bar {
             position: sticky;
             top: 0;
-            background: rgba(255,255,255,0.98);
-            backdrop-filter: blur(8px);
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(5px);
             padding: 10px 20px;
             border-bottom: 3px solid var(--quick-mode-color);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -572,6 +590,13 @@
         @media (max-width: 600px) {
             .level-row, .level-row.reverse { flex-direction: column; gap: 0; }
             .level-wrapper { flex-direction: column; margin-bottom: 10px; }
+            .arrow-right, .arrow-left, .row-connector { display: none; }
+            .level-wrapper::after {
+                content: '⬇'; font-size: 2em; color: var(--secondary-color);
+                animation: pulseDown 2s infinite; display: block; margin: 5px 0;
+            }
+            .level-wrapper:last-child::after { display: none; }
+            .map-avatar { top: 20px; left: -60px; transform: none; }
             
             #music-player-bar { padding: 0 5px; height: 60px; }
             body { padding-top: 80px; }
@@ -787,14 +812,8 @@
         <!-- 快速刷題介面 (瀑布流) -->
         <div id="quick-quiz-screen" style="display: none;" class="fade-in">
             <div class="sticky-score-bar">
-                <div id="quick-title" style="font-size:1.1em; margin-right: 10px;">極速刷題</div>
-                
-                <!-- Progress Bar Container -->
-                <div style="flex:1; height:8px; background:#e0e0e0; border-radius:4px; margin:0 15px; overflow:hidden;">
-                    <div id="quick-progress-bar" style="width:0%; height:100%; background:var(--quick-mode-color); transition:width 0.3s;"></div>
-                </div>
-
-                <div style="background:#f0f0f0; padding:5px 15px; border-radius:20px; font-size:0.9em; margin-right:10px; white-space:nowrap;">
+                <div id="quick-title" style="font-size:1.1em;">極速刷題</div>
+                <div style="background:#f0f0f0; padding:5px 15px; border-radius:20px;">
                     答對：<span id="quick-score-val" style="color:var(--correct-color);">0</span> / <span id="quick-total-val" style="color:#555;">0</span>
                 </div>
                 <button class="btn btn-sm btn-gray" onclick="exitQuickQuiz()">退出</button>
@@ -1136,48 +1155,70 @@
         }
 
         function renderLevelMap() {
-            const container = document.getElementById('level-map');
-            container.innerHTML = "";
+            const container = document.getElementById('level-map'); container.innerHTML = "";
             const progress = getProgress();
-            
-            // Flatten the structure - no more rows
-            // We iterate through the total number of levels defined in LEVEL_CONFIG
-            
-            for (let i = 0; i < LEVEL_CONFIG.length; i++) {
-                let levelNum = i + 1;
-                let btn = document.createElement('button');
-                btn.className = 'level-btn';
-                
-                // Logic for locked/unlocked
-                if (levelNum <= progress.maxLevel) {
-                    let bestScore = progress.levelScores[levelNum];
-                    let icon = bestScore >= 70 ? '🧪' : '⚗️';
-                    if (bestScore === 100) icon = '🔬'; else if (bestScore >= 90) icon = '⚛️';
-                    let scoreText = bestScore !== undefined ? `<div class="level-score">${bestScore}分</div>` : '<div class="level-score">未進行</div>';
-                    
-                    btn.innerHTML = `<div class="level-title">${icon} 實驗${levelNum}</div>${scoreText}`;
-                    btn.onclick = () => startQuiz('level', levelNum);
-                } else {
-                    btn.disabled = true;
-                    btn.innerHTML = `<div class="level-title">🔒 實驗${levelNum}</div><div class="level-score" style="color:#bdc3c7">權限不足</div>`;
+            let rows = [];
+            for (let i = 0; i < LEVEL_CONFIG.length; i += ITEMS_PER_ROW) rows.push(LEVEL_CONFIG.slice(i, i + ITEMS_PER_ROW));
+            rows.forEach((rowItems, rowIndex) => {
+                let rowDiv = document.createElement('div'); rowDiv.className = 'level-row';
+                let isReverse = (rowIndex % 2 !== 0); if (isReverse) rowDiv.classList.add('reverse');
+                let startLevelNum = rowIndex * ITEMS_PER_ROW + 1;
+                rowItems.forEach((_, itemIndex) => {
+                    let levelNum = startLevelNum + itemIndex;
+                    let wrapper = document.createElement('div'); wrapper.className = 'level-wrapper';
+                    let btn = document.createElement('button'); btn.className = 'level-btn';
+                    if (levelNum <= progress.maxLevel) {
+                        let bestScore = progress.levelScores[levelNum];
+                        let icon = bestScore >= 70 ? '🧪' : '⚗️';
+                        if (bestScore === 100) icon = '🔬'; else if (bestScore >= 90) icon = '⚛️';
+                        let scoreText = bestScore !== undefined ? `<div class="level-score">${bestScore}分</div>` : '<div class="level-score">未進行</div>';
+                        btn.innerHTML = `<div class="level-title">${icon} 實驗${levelNum}</div>${scoreText}`;
+                        btn.onclick = () => startQuiz('level', levelNum);
+                        if (levelNum === progress.maxLevel) {
+                            let avatarImg = document.createElement('img'); avatarImg.src = "images/" + currentAvatar; avatarImg.className = "map-avatar"; wrapper.appendChild(avatarImg);
+                        }
+                    } else {
+                        btn.disabled = true; btn.innerHTML = `<div class="level-title">🔒 實驗${levelNum}</div><div class="level-score" style="color:#bdc3c7">權限不足</div>`;
+                    }
+                    wrapper.appendChild(btn);
+                    if (itemIndex < rowItems.length - 1) {
+                        let arrow = document.createElement('div'); arrow.className = 'arrow-icon';
+                        if (isReverse) { arrow.innerHTML = '➜'; arrow.classList.add('arrow-left'); } else { arrow.innerText = '➜'; arrow.classList.add('arrow-right'); }
+                        wrapper.appendChild(arrow);
+                    }
+                    rowDiv.appendChild(wrapper);
+                });
+                container.appendChild(rowDiv);
+                if (rowIndex < rows.length - 1) {
+                    let connectorDiv = document.createElement('div'); connectorDiv.className = 'row-connector';
+                    let downArrow = document.createElement('div'); downArrow.className = 'arrow-icon arrow-down'; downArrow.innerText = '⬇';
+                    if (isReverse) connectorDiv.classList.add('left');
+                    connectorDiv.appendChild(downArrow); container.appendChild(connectorDiv);
                 }
-                
-                container.appendChild(btn);
-            }
+            });
         }
 
         // --- New Quick Quiz Selection Rendering ---
         function renderQuickQuizSelection() {
             const container = document.getElementById('quick-quiz-selection');
             container.innerHTML = "";
+            const progress = getProgress();
             
-            // Single massive button for all levels
-            let btn = document.createElement('button');
-            btn.className = 'quick-level-btn';
-            btn.innerHTML = `🚀 開始刷題 (全範圍)`;
-            btn.onclick = () => startQuickQuiz('all');
-            
-            container.appendChild(btn);
+            // Buttons for each level + Mistake + Favorite
+            for(let i = 1; i <= LEVEL_CONFIG.length; i++) {
+                let btn = document.createElement('button');
+                btn.className = 'quick-level-btn';
+                
+                // Only enable if level is unlocked (same logic as map)
+                if (i <= progress.maxLevel) {
+                    btn.innerText = `單元 ${i}`;
+                    btn.onclick = () => startQuickQuiz('level', i);
+                } else {
+                    btn.innerText = `單元 ${i} (鎖定)`;
+                    btn.disabled = true;
+                }
+                container.appendChild(btn);
+            }
         }
 
         function logout() { location.reload(); }
@@ -1363,30 +1404,22 @@
         function startQuickQuiz(mode, levelNum) {
             // Setup data
             let questionsToLoad = [];
-            
-            if (mode === 'all') {
-                questionsToLoad = allQuestions;
-                document.getElementById('quick-title').innerText = `極速刷題 (全範圍)`;
-            } else if (mode === 'level') {
-                // Keep old logic just in case, though unused now
+            if (mode === 'level') {
                 let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; }
                 let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1];
                 if (allQuestions.length < endIndex) { alert(`資料準備中...`); return; }
                 questionsToLoad = allQuestions.slice(startIndex, endIndex);
                 document.getElementById('quick-title').innerText = `極速刷題：單元 ${levelNum}`;
             }
+            // (Extendable for mistake/favorite mode in waterfall later if needed)
 
-            if(questionsToLoad.length === 0) {
-                alert("目前無題目資料！");
-                return;
-            }
+            if(questionsToLoad.length === 0) return;
 
             // Reset Quick Stats
             quickCorrect = 0;
             quickTotal = 0;
             document.getElementById('quick-score-val').innerText = '0';
             document.getElementById('quick-total-val').innerText = '0';
-            document.getElementById('quick-progress-bar').style.width = '0%'; // Reset bar
 
             // Show Screen
             document.getElementById('level-screen').style.display = 'none';
@@ -1450,12 +1483,16 @@
                 btn.classList.add('correct');
                 quickCorrect++;
                 audioCorrect.play().catch(e=>{});
+                
+                // If in mistake bank, remove it? (Optional, let's keep it simple: sync only adds mistakes usually)
+                // removeFromMistakeBank(qId); 
             } else {
                 // Wrong
                 btn.classList.add('wrong');
                 audioFail.play().catch(e=>{});
                 // Highlight correct one
                 buttons.forEach(b => {
+                    // Extremely simple check: assuming option text starts with (A), (B) etc. matches correctCode
                     if(b.innerText.substring(0,3) === correctCode) b.classList.add('correct');
                 });
                 
@@ -1469,11 +1506,6 @@
             // Update Sticky Score
             document.getElementById('quick-score-val').innerText = quickCorrect;
             document.getElementById('quick-total-val').innerText = quickTotal;
-
-            // Update Progress Bar
-            let totalCards = document.querySelectorAll('.waterfall-card').length;
-            let percentage = (quickTotal / totalCards) * 100;
-            document.getElementById('quick-progress-bar').style.width = percentage + "%";
         }
 
         function exitQuickQuiz() {
