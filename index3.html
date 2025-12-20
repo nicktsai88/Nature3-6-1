@@ -164,8 +164,7 @@
             border: 1px solid rgba(0, 0, 0, 0.05);
             border-top: 6px solid var(--primary-color);
             position: relative;
-            /* 關鍵修改：移除 overflow: hidden 以允許 sticky 生效 */
-            overflow: visible;
+            overflow: hidden;
             min-height: 500px;
             backdrop-filter: blur(10px);
         }
@@ -337,6 +336,9 @@
             border-radius: 10px;
         }
 
+        /* 更新：移除了 arrow-icon, row-connector 相關樣式 
+           更新：調整 .level-map-container 為 Grid 佈局
+        */
         .level-map-container { 
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -373,6 +375,7 @@
 
         /* --- Quick Quiz (Brush Mode) Styles --- */
         .quick-level-grid {
+            /* Modified to single item center if needed, but grid works for 1 item too */
             display: flex;
             justify-content: center;
             padding: 20px 0;
@@ -382,7 +385,7 @@
             background: #fff;
             border: 2px solid var(--quick-mode-color);
             color: var(--quick-mode-color);
-            padding: 20px 30px; 
+            padding: 20px 30px; /* Bigger button */
             border-radius: 30px;
             cursor: pointer;
             font-weight: bold;
@@ -409,19 +412,16 @@
             position: relative;
         }
         
-        /* 關鍵修正：使用 position: sticky 
-           配合移除 quiz-container 的 overflow: hidden
-        */
         .sticky-score-bar {
-            position: sticky; 
-            top: 100px; /* 剛好在 Desktop 音樂播放器下方 */
+            position: sticky;
+            top: 0;
             background: rgba(255,255,255,0.98);
             backdrop-filter: blur(8px);
             padding: 10px 20px;
             border-bottom: 3px solid var(--quick-mode-color);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             z-index: 100;
-            margin: -30px -30px 20px -30px; /* 抵銷 container 的 padding */
+            margin: -30px -30px 20px -30px; /* Counteract padding of container */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -589,7 +589,7 @@
             .player-left { flex: 0; margin-right: 5px;}
             
             .dashboard-sections { flex-direction: column; }
-            .sticky-score-bar { top: 60px; } /* 手機版貼齊較矮的 header */
+            .sticky-score-bar { top: 60px; } /* Adjust for mobile player bar */
         }
 
         /* --- 題目樣式 (General Quiz) --- */
