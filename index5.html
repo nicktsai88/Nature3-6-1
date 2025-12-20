@@ -1561,7 +1561,7 @@
 
                 card.innerHTML = `
                     <button class="quick-fav-btn ${favBtnClass}" onclick="toggleFavoriteById('${q.id}', this)">${favBtnIcon}</button>
-                    <div class="quick-question-text">${q.question}</div>
+                    <div class="quick-question-text">${index+1}. ${q.question}</div>
                     ${imgHTML}
                     <div class="quick-options-grid" id="opts-${q.id}">
                         ${optionsHTML}
@@ -1704,7 +1704,7 @@
                 let userAns = answersData[q.id], correctAns = q.answer;
                 let isRight = (userAns && userAns.substring(0,3) === correctAns.substring(0,3));
                 let tagClass = isRight ? "tag-correct" : "tag-wrong", tagText = isRight ? "正確" : "錯誤";
-                let html = `<li class="review-item"><div style="font-weight:bold; margin-bottom:10px;"><span class="tag ${tagClass}">${tagText}</span> ${q.question}</div>`;
+                let html = `<li class="review-item"><div style="font-weight:bold; margin-bottom:10px;"><span class="tag ${tagClass}">${tagText}</span> ${index + 1}. ${q.question}</div>`;
                 if (q.image) html += `<img src="${q.image}" style="max-height:150px; display:block; margin:10px 0;">`;
                 html += `<div style="font-size:0.9em; color:#555;">你的數據：${userAns || "未紀錄"} <br> 標準數值：<span style="color:var(--correct-color); font-weight:bold;">${correctAns}</span></div><div style="margin-top:5px; background:#fff; padding:8px; border-radius:5px; font-size:0.9em; color:#34495e; border:1px dashed #bdc3c7;">💡 ${q.explanation || "暫無原理說明"}</div></li>`;
                 list.innerHTML += html;
