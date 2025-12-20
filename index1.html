@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>理化第3冊 6-1 元素與化合物 - 實驗室 Dashboard</title>
+    <title>理化第3冊 6-1 元素與化合物</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -19,7 +19,6 @@
             --locked-color: #95a5a6;    /* 金屬灰 */
             --music-btn-color: #34495e; /* 儀器黑 */
             --favorite-color: #e056fd;  /* 紫色 (稀有氣體感) */
-            --quick-mode-color: #8e44ad; /* 快速模式紫 */
             --player-bg: #ffffff;       /* 播放器背景 */
             --player-border: #bdc3c7;   /* 邊框 */
         }
@@ -169,7 +168,7 @@
             backdrop-filter: blur(10px);
         }
         
-        /* 首頁背景樣式 */
+        /* 首頁背景樣式 (使用 elements.jpg) */
         #welcome-screen {
             background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('images/elements.jpg');
             background-size: cover;
@@ -227,9 +226,6 @@
         .btn-pink { background-color: var(--favorite-color); box-shadow: 0 4px 10px rgba(224, 86, 253, 0.3); }
         .btn-pink:hover { background-color: #be2edd; }
         
-        .btn-purple { background-color: var(--quick-mode-color); box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); }
-        .btn-purple:hover { background-color: #732d91; }
-
         .btn-sm { padding: 8px 16px; font-size: 0.95em; border-radius: 20px; margin: 0 2px;}
         
         /* --- 輸入框與快速登入 --- */
@@ -273,47 +269,7 @@
             box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.2);
         }
 
-        /* --- Dashboard Split Layout --- */
-        .dashboard-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .dashboard-header {
-            background: rgba(255,255,255,0.9); padding:10px 20px; border-radius:30px; 
-            display:inline-block; margin-bottom:20px; border: 1px solid #bdc3c7; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .dashboard-sections {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .dashboard-section {
-            flex: 1;
-            min-width: 300px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #e1e8ed;
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-
-        .section-title {
-            text-align: center; font-size: 1.4em; margin-bottom: 20px;
-            font-weight: bold; padding-bottom: 10px; border-bottom: 2px solid #eee;
-        }
-        
-        .section-standard .section-title { color: var(--primary-color); border-color: var(--primary-color); }
-        .section-quick .section-title { color: var(--quick-mode-color); border-color: var(--quick-mode-color); }
-        .section-quick { border-top: 4px solid var(--quick-mode-color); background: #fcf6ff; }
-        .section-standard { border-top: 4px solid var(--primary-color); }
-
-        /* --- 關卡地圖樣式 (Standard Mode) --- */
+        /* --- 關卡地圖樣式 (元素週期表風格) --- */
         #level-screen {
             background-image: url('images/elements.jpg'); 
             background-color: #ecf0f1; 
@@ -328,12 +284,18 @@
             z-index: 1;
         }
         
+        /* 增加一個半透明遮罩讓背景圖不要太搶眼 */
         #level-screen::before {
             content: "";
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.85);
             z-index: -1;
             border-radius: 10px;
+        }
+
+        @media (orientation: portrait) {
+            #level-screen { min-height: 80vh; background-position: center top; }
+            .level-map-container { gap: 30px; margin-top: 40px; }
         }
 
         .level-map-container { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 20px 0; }
@@ -353,10 +315,11 @@
             50% { transform: translateX(-50%) translateY(-10px); }
         }
 
+        /* 關卡按鈕改為六角形或圓形，這裡維持圓形但風格更現代 */
         .level-btn {
             background-color: #fff; 
             border: 4px solid var(--primary-color);
-            border-radius: 15px; 
+            border-radius: 15px; /* 稍微圓角矩形，像元素方塊 */
             width: 90px;
             height: 90px;
             font-size: 1em;
@@ -395,148 +358,6 @@
             justify-content: flex-end; padding-right: 45px; box-sizing: border-box;
         }
         .row-connector.left { justify-content: flex-start; padding-left: 45px; padding-right: 0; }
-
-        /* --- Quick Quiz (Brush Mode) Styles --- */
-        .quick-level-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 15px;
-        }
-        
-        .quick-level-btn {
-            background: #fff;
-            border: 2px solid var(--quick-mode-color);
-            color: var(--quick-mode-color);
-            padding: 15px 5px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            box-shadow: 0 4px 0 #dedede;
-            text-align: center;
-        }
-        .quick-level-btn:hover {
-            background: var(--quick-mode-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #dedede;
-        }
-        .quick-level-btn:disabled {
-            border-color: #ccc; color: #ccc; cursor: default; box-shadow: none; transform: none; background: #eee;
-        }
-
-        /* --- Waterfall Quiz Styles --- */
-        #quick-quiz-screen {
-            position: relative;
-        }
-        
-        .sticky-score-bar {
-            position: sticky;
-            top: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(5px);
-            padding: 10px 20px;
-            border-bottom: 3px solid var(--quick-mode-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            z-index: 100;
-            margin: -30px -30px 20px -30px; /* Counteract padding of container */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            color: var(--quick-mode-color);
-        }
-
-        .waterfall-list {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .waterfall-card {
-            background: #fff;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            padding: 20px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
-            position: relative;
-            transition: 0.3s;
-        }
-        .waterfall-card.answered {
-            background-color: #fbfbfb;
-        }
-        .waterfall-card:hover {
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-        }
-
-        .quick-question-text {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            padding-right: 40px; /* Space for favorite icon */
-        }
-        
-        .quick-fav-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: 2px solid #ddd;
-            color: #ccc;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .quick-fav-btn.active {
-            color: var(--favorite-color);
-            border-color: var(--favorite-color);
-            background: #fff0ff;
-        }
-
-        .quick-options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-        @media(min-width: 600px) {
-            .quick-options-grid { grid-template-columns: 1fr 1fr; }
-        }
-
-        .quick-opt-btn {
-            padding: 12px;
-            border: 2px solid #e1e8ed;
-            background: #fff;
-            border-radius: 8px;
-            text-align: left;
-            cursor: pointer;
-            color: #555;
-            transition: 0.2s;
-            font-size: 1.1em;
-        }
-        .quick-opt-btn:hover:not(:disabled) {
-            border-color: var(--quick-mode-color);
-            background: #fcf6ff;
-        }
-        .quick-opt-btn.correct {
-            background-color: #d4edda !important;
-            border-color: var(--correct-color) !important;
-            color: #155724;
-            font-weight: bold;
-        }
-        .quick-opt-btn.wrong {
-            background-color: #f8d7da !important;
-            border-color: var(--wrong-color) !important;
-            color: #721c24;
-        }
-        .quick-opt-btn:disabled {
-            cursor: default;
-            opacity: 0.8;
-        }
 
         /* --- 元素圖鑑樣式 (Collection) --- */
         .collection-grid {
@@ -612,12 +433,9 @@
             .ctrl-separator { display: none; }
             .player-right { display: flex; flex: 1; justify-content: flex-end; } 
             .player-left { flex: 0; margin-right: 5px;}
-            
-            .dashboard-sections { flex-direction: column; }
-            .sticky-score-bar { top: 60px; } /* Adjust for mobile player bar */
         }
 
-        /* --- 題目樣式 (General Quiz) --- */
+        /* --- 題目樣式 --- */
         .question-box { 
             background-color: #fff; 
             border-left: 6px solid var(--primary-color);
@@ -740,31 +558,15 @@
         </div>
 
         <div id="level-screen" style="display: none; text-align: center;" class="fade-in">
-            <div class="dashboard-header">
-                <h2 style="margin:0; color: #2c3e50; font-size: 1.4em;">🗺️ 實驗控制台 (Dashboard)</h2>
+            <div style="background: rgba(255,255,255,0.9); padding:10px 20px; border-radius:30px; display:inline-block; margin-bottom:20px; border: 1px solid #bdc3c7; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <h2 style="margin:0; color: #2c3e50; font-size: 1.4em;">🗺️ 元素探索地圖</h2>
                 <p style="font-size: 1.1em; margin:5px; color: #555;">
                     <img id="user-avatar-display" src="" style="width:30px; vertical-align:middle; border-radius:50%; border:1px solid #bdc3c7;">
                     研究員：<span id="display-name" style="color:var(--primary-color); font-weight:bold;"></span>
                 </p>
             </div>
-
-            <div class="dashboard-sections">
-                <!-- 左側：一般測驗 (原有的地圖) -->
-                <div class="dashboard-section section-standard">
-                    <div class="section-title">🧪 標準實驗模式</div>
-                    <p style="color:#666; margin-bottom:15px; font-size:0.9em;">逐關挑戰，適合模擬考試情境</p>
-                    <div id="level-map" class="level-map-container"></div>
-                </div>
-
-                <!-- 右側：快速刷題 (新增) -->
-                <div class="dashboard-section section-quick">
-                    <div class="section-title">⚡ 極速刷題區</div>
-                    <p style="color:#666; margin-bottom:15px; font-size:0.9em;">瀑布流列表，快速複習與鎖定弱點</p>
-                    <div id="quick-quiz-selection" class="quick-level-grid">
-                        <!-- JS 動態生成按鈕 -->
-                    </div>
-                </div>
-            </div>
+            
+            <div id="level-map" class="level-map-container"></div>
             
             <div style="margin-top: 30px; background: rgba(255,255,255,0.9); padding:20px; border-radius:15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; border: 1px solid #e1e8ed;">
                 <button id="btn-mistake" class="btn btn-red" onclick="startQuiz('mistake')" style="display:none;">📕 實驗筆記 (<span id="mistake-count">0</span>)</button>
@@ -776,7 +578,6 @@
             </div>
         </div>
 
-        <!-- 一般測驗介面 (逐題) -->
         <div id="quiz-content" style="display: none;" class="fade-in">
             <div class="quiz-header">
                 <h3 id="level-title" style="margin:0; font-size: 1.5em; color: #2c3e50;">實驗 X</h3>
@@ -807,21 +608,6 @@
             </div>
 
             <button id="next-btn" class="btn" style="display: none; width: 100%; margin-top: 25px;" onclick="nextQuestion()">下一個實驗 ➡️</button>
-        </div>
-
-        <!-- 快速刷題介面 (瀑布流) -->
-        <div id="quick-quiz-screen" style="display: none;" class="fade-in">
-            <div class="sticky-score-bar">
-                <div id="quick-title" style="font-size:1.1em;">極速刷題</div>
-                <div style="background:#f0f0f0; padding:5px 15px; border-radius:20px;">
-                    答對：<span id="quick-score-val" style="color:var(--correct-color);">0</span> / <span id="quick-total-val" style="color:#555;">0</span>
-                </div>
-                <button class="btn btn-sm btn-gray" onclick="exitQuickQuiz()">退出</button>
-            </div>
-
-            <div id="quick-list-container" class="waterfall-list">
-                <!-- 題目卡片由此生成 -->
-            </div>
         </div>
 
         <div id="score-box" style="display: none; text-align: center;" class="fade-in">
@@ -916,10 +702,6 @@
         let allQuestions = [], currentQuizQuestions = [], currentQuestionIndex = 0, score = 0;
         let userName = "", currentLevel = 1, userAnswers = {}, isMistakeMode = false, isFavoriteMode = false;
         let currentAvatar = "Chris.png"; 
-        
-        // Quick Quiz Variables
-        let quickCorrect = 0;
-        let quickTotal = 0;
         
         let audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
         let audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
@@ -1064,11 +846,9 @@
             updateMusicUI();
         }
 
-        // Fetch questions
-        fetch('questions.json').then(res => res.json()).then(data => { 
-            allQuestions = data; 
-            renderQuickLogin(); 
-        }).catch(e => console.error(e));
+        // 注意：這裡還是讀取 questions.json，但因為題目尚未更新，所以會顯示舊的歷史題目。
+        // 下一步我們會處理 questions.json 的內容。
+        fetch('questions.json').then(res => res.json()).then(data => { allQuestions = data; renderQuickLogin(); }).catch(e => console.error(e));
 
         function getUserKey(key) { return APP_PREFIX + userName + '_' + key; }
 
@@ -1149,7 +929,6 @@
             document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none');
             document.getElementById('level-screen').style.display = 'block';
             renderLevelMap(); 
-            renderQuickQuizSelection(); // Render the new quick mode buttons
             updateMistakeButton();
             updateFavoriteButton(); 
         }
@@ -1198,33 +977,9 @@
             });
         }
 
-        // --- New Quick Quiz Selection Rendering ---
-        function renderQuickQuizSelection() {
-            const container = document.getElementById('quick-quiz-selection');
-            container.innerHTML = "";
-            const progress = getProgress();
-            
-            // Buttons for each level + Mistake + Favorite
-            for(let i = 1; i <= LEVEL_CONFIG.length; i++) {
-                let btn = document.createElement('button');
-                btn.className = 'quick-level-btn';
-                
-                // Only enable if level is unlocked (same logic as map)
-                if (i <= progress.maxLevel) {
-                    btn.innerText = `單元 ${i}`;
-                    btn.onclick = () => startQuickQuiz('level', i);
-                } else {
-                    btn.innerText = `單元 ${i} (鎖定)`;
-                    btn.disabled = true;
-                }
-                container.appendChild(btn);
-            }
-        }
-
         function logout() { location.reload(); }
         function exitQuiz() { if(confirm("確定要中止實驗，返回地圖嗎？")) goToLevelScreen(); }
 
-        // --- Standard Quiz Logic ---
         function startQuiz(mode, levelNum) {
             isMistakeMode = (mode === 'mistake');
             isFavoriteMode = (mode === 'favorite'); 
@@ -1298,21 +1053,6 @@
             }
             localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(favs));
             updateFavoriteUI();
-        }
-        
-        // Overloaded function for Quick Quiz Favorite
-        function toggleFavoriteById(qId, btnElement) {
-            let favs = getFavoriteBank();
-            if (favs.includes(qId)) {
-                favs = favs.filter(id => id !== qId);
-                btnElement.classList.remove('active');
-                btnElement.innerHTML = '☆';
-            } else {
-                favs.push(qId);
-                btnElement.classList.add('active');
-                btnElement.innerHTML = '★';
-            }
-            localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(favs));
         }
 
         function updateFavoriteUI() {
@@ -1398,123 +1138,6 @@
             saveHistory(userName, finalScore, currentQuizQuestions, userAnswers, modeName);
             renderReviewList('review-list', currentQuizQuestions, userAnswers);
         }
-        
-        // --- Quick Quiz Module (Waterfall) Logic ---
-        
-        function startQuickQuiz(mode, levelNum) {
-            // Setup data
-            let questionsToLoad = [];
-            if (mode === 'level') {
-                let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; }
-                let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1];
-                if (allQuestions.length < endIndex) { alert(`資料準備中...`); return; }
-                questionsToLoad = allQuestions.slice(startIndex, endIndex);
-                document.getElementById('quick-title').innerText = `極速刷題：單元 ${levelNum}`;
-            }
-            // (Extendable for mistake/favorite mode in waterfall later if needed)
-
-            if(questionsToLoad.length === 0) return;
-
-            // Reset Quick Stats
-            quickCorrect = 0;
-            quickTotal = 0;
-            document.getElementById('quick-score-val').innerText = '0';
-            document.getElementById('quick-total-val').innerText = '0';
-
-            // Show Screen
-            document.getElementById('level-screen').style.display = 'none';
-            document.getElementById('quick-quiz-screen').style.display = 'block';
-            window.scrollTo(0,0);
-
-            // Render Waterfall List
-            const listContainer = document.getElementById('quick-list-container');
-            listContainer.innerHTML = '';
-
-            let favs = getFavoriteBank();
-
-            questionsToLoad.forEach((q, index) => {
-                const card = document.createElement('div');
-                card.className = 'waterfall-card';
-                card.id = `q-card-${q.id}`;
-                
-                let isFav = favs.includes(q.id);
-                let favBtnClass = isFav ? 'active' : '';
-                let favBtnIcon = isFav ? '★' : '☆';
-
-                let imgHTML = q.image ? `<img src="${q.image}" class="question-img">` : '';
-
-                // Build Options HTML
-                let optionsHTML = '';
-                q.options.forEach(opt => {
-                    // Store safe strings in data attributes to avoid quote escaping issues in onclick
-                    optionsHTML += `<button class="quick-opt-btn" onclick="checkQuickAnswer(this, '${q.id}', '${q.answer.substring(0,3)}', '${opt.substring(0,3)}')">${opt}</button>`;
-                });
-
-                card.innerHTML = `
-                    <button class="quick-fav-btn ${favBtnClass}" onclick="toggleFavoriteById('${q.id}', this)">${favBtnIcon}</button>
-                    <div class="quick-question-text">${index+1}. ${q.question}</div>
-                    ${imgHTML}
-                    <div class="quick-options-grid" id="opts-${q.id}">
-                        ${optionsHTML}
-                    </div>
-                    <div id="explanation-${q.id}" style="display:none; margin-top:15px; padding:10px; background:#f0f4f8; border-radius:5px; color:#555;">
-                        <strong>解析：</strong> ${q.explanation || '暫無'}
-                    </div>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
-
-        function checkQuickAnswer(btn, qId, correctCode, selectedCode) {
-            // Locate the specific card context
-            const optsContainer = document.getElementById(`opts-${qId}`);
-            const buttons = optsContainer.querySelectorAll('.quick-opt-btn');
-            
-            // Prevent multiple clicks
-            if(optsContainer.classList.contains('locked')) return;
-            optsContainer.classList.add('locked');
-            document.getElementById(`q-card-${qId}`).classList.add('answered');
-
-            quickTotal++;
-            
-            // Logic
-            if (selectedCode === correctCode) {
-                // Correct
-                btn.classList.add('correct');
-                quickCorrect++;
-                audioCorrect.play().catch(e=>{});
-                
-                // If in mistake bank, remove it? (Optional, let's keep it simple: sync only adds mistakes usually)
-                // removeFromMistakeBank(qId); 
-            } else {
-                // Wrong
-                btn.classList.add('wrong');
-                audioFail.play().catch(e=>{});
-                // Highlight correct one
-                buttons.forEach(b => {
-                    // Extremely simple check: assuming option text starts with (A), (B) etc. matches correctCode
-                    if(b.innerText.substring(0,3) === correctCode) b.classList.add('correct');
-                });
-                
-                // Add to mistake bank
-                addToMistakeBank(qId);
-            }
-
-            // Show explanation
-            document.getElementById(`explanation-${qId}`).style.display = 'block';
-
-            // Update Sticky Score
-            document.getElementById('quick-score-val').innerText = quickCorrect;
-            document.getElementById('quick-total-val').innerText = quickTotal;
-        }
-
-        function exitQuickQuiz() {
-            if(confirm("確定要退出刷題模式嗎？")) {
-                goToLevelScreen();
-            }
-        }
-
-        // --- Common Functions ---
 
         function showCollection() {
             document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none');
@@ -1567,13 +1190,11 @@
         function addToMistakeBank(id) {
             let mistakes = getMistakeBank();
             if (!mistakes.includes(id)) { mistakes.push(id); localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(mistakes)); }
-            updateMistakeButton(); // Refresh count if visible elsewhere
         }
         function removeFromMistakeBank(id) {
             let mistakes = getMistakeBank();
             mistakes = mistakes.filter(mId => mId !== id);
             localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(mistakes));
-            updateMistakeButton();
         }
         function toggleReview() {
             let reviewArea = document.getElementById('full-review-area');
