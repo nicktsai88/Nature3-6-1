@@ -230,9 +230,6 @@
         
         .btn-purple { background-color: var(--quick-mode-color); box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); }
         .btn-purple:hover { background-color: #732d91; }
-        
-        .btn-orange { background-color: #e67e22; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3); }
-        .btn-orange:hover { background-color: #d35400; }
 
         .btn-sm { padding: 8px 16px; font-size: 0.95em; border-radius: 20px; margin: 0 2px;}
         
@@ -732,10 +729,6 @@
                     <div class="section-title">🧪 標準實驗模式</div>
                     <p style="color:#666; margin-bottom:15px; font-size:0.9em;">逐關挑戰，適合模擬考試情境</p>
                     <div id="level-map" class="level-map-container"></div>
-                    <!-- 繼續按鈕插槽 -->
-                    <div id="resume-container" style="margin-top:20px; text-align:center; display:none;">
-                        <button class="btn btn-orange" onclick="resumeStandardQuiz()">↪️ 繼續上次的實驗</button>
-                    </div>
                 </div>
 
                 <!-- 右側：快速刷題 (新增) -->
@@ -908,7 +901,6 @@
         // Quick Quiz Variables
         let quickCorrect = 0;
         let quickTotal = 0;
-        let quickUserAnswers = {}; // 追蹤每一題的作答狀態 { qId: { correctCode, selectedCode, isCorrect } }
         
         let audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
         let audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
@@ -1100,9 +1092,6 @@
             localStorage.removeItem(APP_PREFIX + name + '_favoriteBank'); 
             localStorage.removeItem(APP_PREFIX + name + '_quizHistory');
             localStorage.removeItem(APP_PREFIX + name + '_quizProgress');
-            // 也刪除暫存
-            localStorage.removeItem(APP_PREFIX + name + '_standardState');
-            localStorage.removeItem(APP_PREFIX + name + '_quickState');
             let users = getSavedUsers();
             users = users.filter(u => (typeof u === 'string' ? u : u.name) !== name);
             localStorage.setItem(APP_PREFIX + 'savedUsers', JSON.stringify(users));
@@ -1141,33 +1130,25 @@
             document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none');
             document.getElementById('level-screen').style.display = 'block';
             renderLevelMap(); 
-            renderQuickQuizSelection(); 
+            renderQuickQuizSelection(); // Render the new quick mode buttons
             updateMistakeButton();
             updateFavoriteButton(); 
         }
 
         function renderLevelMap() {
             const container = document.getElementById('level-map');
-            const resumeContainer = document.getElementById('resume-container');
             container.innerHTML = "";
-            
-            // 檢查是否有標準模式的存檔
-            const savedState = localStorage.getItem(getUserKey('standardState'));
-            if (savedState) {
-                resumeContainer.style.display = 'block';
-                // 為了方便，可以在這裡顯示更多資訊，例如「單元 X - 第 N 題」
-                // 目前僅顯示按鈕
-            } else {
-                resumeContainer.style.display = 'none';
-            }
-
             const progress = getProgress();
+            
+            // Flatten the structure - no more rows
+            // We iterate through the total number of levels defined in LEVEL_CONFIG
             
             for (let i = 0; i < LEVEL_CONFIG.length; i++) {
                 let levelNum = i + 1;
                 let btn = document.createElement('button');
                 btn.className = 'level-btn';
                 
+                // Logic for locked/unlocked
                 if (levelNum <= progress.maxLevel) {
                     let bestScore = progress.levelScores[levelNum];
                     let icon = bestScore >= 70 ? '🧪' : '⚗️';
@@ -1200,115 +1181,35 @@
         }
 
         function logout() { location.reload(); }
-        
-        function exitQuiz() { 
-            // 離開時清除存檔，因為使用者選擇「中止」
-            if(confirm("確定要中止實驗，返回地圖嗎？\n(注意：中止後進度將被清除)")) {
-                clearStandardState();
-                goToLevelScreen(); 
-            }
-        }
-
-        // --- State Management Helpers ---
-        function saveStandardState() {
-            const state = {
-                level: currentLevel,
-                mode: isMistakeMode ? 'mistake' : (isFavoriteMode ? 'favorite' : 'level'),
-                qIndex: currentQuestionIndex,
-                score: score,
-                answers: userAnswers,
-                qIds: currentQuizQuestions.map(q => q.id), // Store IDs to reconstruct list
-                timestamp: Date.now()
-            };
-            localStorage.setItem(getUserKey('standardState'), JSON.stringify(state));
-        }
-
-        function clearStandardState() {
-            localStorage.removeItem(getUserKey('standardState'));
-        }
-
-        function saveQuickState() {
-            const state = {
-                correct: quickCorrect,
-                total: quickTotal,
-                answers: quickUserAnswers,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(getUserKey('quickState'), JSON.stringify(state));
-        }
-
-        function clearQuickState() {
-            localStorage.removeItem(getUserKey('quickState'));
-        }
+        function exitQuiz() { if(confirm("確定要中止實驗，返回地圖嗎？")) goToLevelScreen(); }
 
         // --- Standard Quiz Logic ---
-        function startQuiz(mode, levelNum, isResume = false) {
-            // 如果不是恢復模式，則檢查是否有未完成存檔
-            // 如果是點擊特定關卡/按鈕進入，我們假設使用者想重新開始，除非他點擊了「繼續」按鈕
-            // 這裡的邏輯：startQuiz 正常呼叫時覆蓋舊存檔，resumeStandardQuiz 呼叫時傳入 true
+        function startQuiz(mode, levelNum) {
+            isMistakeMode = (mode === 'mistake');
+            isFavoriteMode = (mode === 'favorite'); 
+            userAnswers = {}; score = 0; currentQuestionIndex = 0;
             
-            if (!isResume) {
-                // 初始化新測驗
-                isMistakeMode = (mode === 'mistake');
-                isFavoriteMode = (mode === 'favorite'); 
-                userAnswers = {}; score = 0; currentQuestionIndex = 0;
-                
-                if (isMistakeMode) {
-                    let mistakeIds = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
-                    currentQuizQuestions = allQuestions.filter(q => mistakeIds.includes(q.id));
-                    document.getElementById('level-title').innerText = "📕 實驗筆記";
-                } else if (isFavoriteMode) { 
-                    let favIds = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
-                    currentQuizQuestions = allQuestions.filter(q => favIds.includes(q.id));
-                    document.getElementById('level-title').innerText = "⭐ 重點收藏";
-                } else {
-                    currentLevel = levelNum;
-                    let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; }
-                    let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1];
-                    if (allQuestions.length < endIndex) { alert(`實驗器材準備中，請稍後再試。`); return; }
-                    currentQuizQuestions = allQuestions.slice(startIndex, endIndex);
-                    document.getElementById('level-title').innerText = `🔬 實驗 ${levelNum}`;
-                }
+            if (isMistakeMode) {
+                let mistakeIds = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
+                currentQuizQuestions = allQuestions.filter(q => mistakeIds.includes(q.id));
+                document.getElementById('level-title').innerText = "📕 實驗筆記";
+            } else if (isFavoriteMode) { 
+                let favIds = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+                currentQuizQuestions = allQuestions.filter(q => favIds.includes(q.id));
+                document.getElementById('level-title').innerText = "⭐ 重點收藏";
             } else {
-                // 恢復模式：資料已經在 resumeStandardQuiz 中準備好了
+                currentLevel = levelNum;
+                let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; }
+                let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1];
+                if (allQuestions.length < endIndex) { alert(`實驗器材準備中，請稍後再試。`); return; }
+                currentQuizQuestions = allQuestions.slice(startIndex, endIndex);
+                document.getElementById('level-title').innerText = `🔬 實驗 ${levelNum}`;
             }
-
             if (currentQuizQuestions.length === 0) { alert("目前無實驗項目！"); return; }
-            
-            // 開始測驗，立即存檔
-            saveStandardState();
-
             document.getElementById('level-screen').style.display = 'none';
             document.getElementById('quiz-content').style.display = 'block';
             document.getElementById('total-q-num').innerText = currentQuizQuestions.length;
             loadQuestion();
-        }
-
-        function resumeStandardQuiz() {
-            const savedStateStr = localStorage.getItem(getUserKey('standardState'));
-            if (!savedStateStr) { alert("找不到存檔！"); goToLevelScreen(); return; }
-            
-            const state = JSON.parse(savedStateStr);
-            
-            // Restore Variables
-            currentLevel = state.level;
-            isMistakeMode = state.mode === 'mistake';
-            isFavoriteMode = state.mode === 'favorite';
-            currentQuestionIndex = state.qIndex;
-            score = state.score;
-            userAnswers = state.answers || {};
-            
-            // Reconstruct Questions from IDs
-            currentQuizQuestions = allQuestions.filter(q => state.qIds.includes(q.id));
-            // 排序可能跑掉，這裡假設 IDs 順序與陣列一致。如果需要嚴格順序：
-            currentQuizQuestions = state.qIds.map(id => allQuestions.find(q => q.id === id)).filter(q => q);
-
-            // UI Title
-            if (isMistakeMode) document.getElementById('level-title').innerText = "📕 實驗筆記 (繼續)";
-            else if (isFavoriteMode) document.getElementById('level-title').innerText = "⭐ 重點收藏 (繼續)";
-            else document.getElementById('level-title').innerText = `🔬 實驗 ${currentLevel} (繼續)`;
-
-            startQuiz(null, null, true);
         }
 
         function loadQuestion() {
@@ -1358,6 +1259,7 @@
             updateFavoriteUI();
         }
         
+        // Overloaded function for Quick Quiz Favorite
         function toggleFavoriteById(qId, btnElement) {
             let favs = getFavoriteBank();
             if (favs.includes(qId)) {
@@ -1399,25 +1301,16 @@
             document.getElementById('explanation-text').innerText = questionData.explanation || "暫無原理說明";
             document.getElementById('explanation').style.display = 'block';
             document.getElementById('next-btn').style.display = 'block';
-            
-            // Save state immediately
-            saveStandardState();
         }
 
         function nextQuestion() {
             currentQuestionIndex++;
             let progress = ((currentQuestionIndex) / currentQuizQuestions.length) * 100;
             document.getElementById('progress-bar').style.width = progress + "%";
-            // Save state index
-            saveStandardState();
-            
             if (currentQuestionIndex < currentQuizQuestions.length) loadQuestion(); else setTimeout(showResult, 500);
         }
 
         function showResult() {
-            // Clear saved state as quiz is finished
-            clearStandardState();
-
             document.getElementById('quiz-content').style.display = 'none';
             document.getElementById('score-box').style.display = 'block';
             let finalScore = Math.round((score / currentQuizQuestions.length) * 100);
@@ -1467,41 +1360,33 @@
         
         // --- Quick Quiz Module (Waterfall) Logic ---
         
-        function startQuickQuiz(mode) {
-            // Check for saved state
-            const savedStateStr = localStorage.getItem(getUserKey('quickState'));
-            let resume = false;
-            if (savedStateStr) {
-                resume = confirm("發現上次未完成的極速刷題紀錄，是否繼續？\n(按「取消」將重新開始)");
-                if (!resume) {
-                    clearQuickState();
-                }
-            }
-
+        function startQuickQuiz(mode, levelNum) {
             // Setup data
-            let questionsToLoad = allQuestions; // Always all in this mode
-            if(questionsToLoad.length === 0) { alert("目前無題目資料！"); return; }
-
-            // Initialize or Restore
-            if (resume) {
-                const state = JSON.parse(savedStateStr);
-                quickCorrect = state.correct;
-                quickTotal = state.total;
-                quickUserAnswers = state.answers || {};
-            } else {
-                quickCorrect = 0;
-                quickTotal = 0;
-                quickUserAnswers = {};
+            let questionsToLoad = [];
+            
+            if (mode === 'all') {
+                questionsToLoad = allQuestions;
+                document.getElementById('quick-title').innerText = `極速刷題 (全範圍)`;
+            } else if (mode === 'level') {
+                // Keep old logic just in case, though unused now
+                let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; }
+                let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1];
+                if (allQuestions.length < endIndex) { alert(`資料準備中...`); return; }
+                questionsToLoad = allQuestions.slice(startIndex, endIndex);
+                document.getElementById('quick-title').innerText = `極速刷題：單元 ${levelNum}`;
             }
 
-            document.getElementById('quick-title').innerText = `極速刷題 (全範圍)`;
-            
-            // UI Update
-            document.getElementById('quick-score-val').innerText = quickCorrect;
-            document.getElementById('quick-total-val').innerText = quickTotal;
-            let totalCards = questionsToLoad.length;
-            let percentage = (quickTotal / totalCards) * 100;
-            document.getElementById('quick-progress-bar').style.width = percentage + "%";
+            if(questionsToLoad.length === 0) {
+                alert("目前無題目資料！");
+                return;
+            }
+
+            // Reset Quick Stats
+            quickCorrect = 0;
+            quickTotal = 0;
+            document.getElementById('quick-score-val').innerText = '0';
+            document.getElementById('quick-total-val').innerText = '0';
+            document.getElementById('quick-progress-bar').style.width = '0%'; // Reset bar
 
             // Show Screen
             document.getElementById('level-screen').style.display = 'none';
@@ -1527,36 +1412,9 @@
 
                 // Build Options HTML
                 let optionsHTML = '';
-                
-                // If resuming, check if this question was answered
-                let pastAnswer = quickUserAnswers[q.id];
-                let isLocked = !!pastAnswer;
-                let explanationDisplay = isLocked ? 'block' : 'none';
-                
-                if (isLocked) {
-                    card.classList.add('answered');
-                }
-
                 q.options.forEach(opt => {
-                    let btnClass = "quick-opt-btn";
-                    let optCode = opt.substring(0,3);
-                    let correctCode = q.answer.substring(0,3);
-                    
-                    if (isLocked) {
-                        // Apply historical state colors
-                        if (optCode === correctCode) {
-                            btnClass += " correct";
-                        } else if (pastAnswer.selectedCode === optCode && !pastAnswer.isCorrect) {
-                            btnClass += " wrong";
-                        }
-                    }
-
-                    // Store safe strings
-                    // If locked, disable button. If not, add onclick.
-                    let onClickAttr = isLocked ? '' : `onclick="checkQuickAnswer(this, '${q.id}', '${correctCode}', '${optCode}')"`;
-                    let disabledAttr = isLocked ? 'disabled' : '';
-
-                    optionsHTML += `<button class="${btnClass}" ${onClickAttr} ${disabledAttr}>${opt}</button>`;
+                    // Store safe strings in data attributes to avoid quote escaping issues in onclick
+                    optionsHTML += `<button class="quick-opt-btn" onclick="checkQuickAnswer(this, '${q.id}', '${q.answer.substring(0,3)}', '${opt.substring(0,3)}')">${opt}</button>`;
                 });
 
                 card.innerHTML = `
@@ -1566,7 +1424,7 @@
                     <div class="quick-options-grid" id="opts-${q.id}">
                         ${optionsHTML}
                     </div>
-                    <div id="explanation-${q.id}" style="display:${explanationDisplay}; margin-top:15px; padding:10px; background:#f0f4f8; border-radius:5px; color:#555;">
+                    <div id="explanation-${q.id}" style="display:none; margin-top:15px; padding:10px; background:#f0f4f8; border-radius:5px; color:#555;">
                         <strong>解析：</strong> ${q.explanation || '暫無'}
                     </div>
                 `;
@@ -1579,55 +1437,47 @@
             const optsContainer = document.getElementById(`opts-${qId}`);
             const buttons = optsContainer.querySelectorAll('.quick-opt-btn');
             
-            if(optsContainer.classList.contains('locked')) return; // Just in case
-            
-            // Logic
-            let isCorrect = (selectedCode === correctCode);
+            // Prevent multiple clicks
+            if(optsContainer.classList.contains('locked')) return;
+            optsContainer.classList.add('locked');
+            document.getElementById(`q-card-${qId}`).classList.add('answered');
+
             quickTotal++;
             
-            if (isCorrect) {
+            // Logic
+            if (selectedCode === correctCode) {
+                // Correct
                 btn.classList.add('correct');
                 quickCorrect++;
                 audioCorrect.play().catch(e=>{});
             } else {
+                // Wrong
                 btn.classList.add('wrong');
                 audioFail.play().catch(e=>{});
                 // Highlight correct one
                 buttons.forEach(b => {
-                    // Simple check for (A), (B)...
                     if(b.innerText.substring(0,3) === correctCode) b.classList.add('correct');
                 });
                 
+                // Add to mistake bank
                 addToMistakeBank(qId);
             }
 
-            // Lock UI
-            buttons.forEach(b => b.disabled = true);
-            document.getElementById(`q-card-${qId}`).classList.add('answered');
+            // Show explanation
             document.getElementById(`explanation-${qId}`).style.display = 'block';
-
-            // Update State Data
-            quickUserAnswers[qId] = {
-                correctCode: correctCode,
-                selectedCode: selectedCode,
-                isCorrect: isCorrect
-            };
-
-            // Save Progress
-            saveQuickState();
 
             // Update Sticky Score
             document.getElementById('quick-score-val').innerText = quickCorrect;
             document.getElementById('quick-total-val').innerText = quickTotal;
 
             // Update Progress Bar
-            let totalCards = allQuestions.length;
+            let totalCards = document.querySelectorAll('.waterfall-card').length;
             let percentage = (quickTotal / totalCards) * 100;
             document.getElementById('quick-progress-bar').style.width = percentage + "%";
         }
 
         function exitQuickQuiz() {
-            if(confirm("確定要退出刷題模式嗎？\n(您的進度已自動儲存)")) {
+            if(confirm("確定要退出刷題模式嗎？")) {
                 goToLevelScreen();
             }
         }
