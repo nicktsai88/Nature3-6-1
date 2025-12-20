@@ -749,9 +749,8 @@
             </div>
             
             <div style="margin-top: 30px; background: rgba(255,255,255,0.9); padding:20px; border-radius:15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; border: 1px solid #e1e8ed;">
-                <!-- 修改為使用 startQuickQuiz -->
-                <button id="btn-mistake" class="btn btn-red" onclick="startQuickQuiz('mistake')" style="display:none;">📕 實驗筆記 (<span id="mistake-count">0</span>)</button>
-                <button id="btn-favorite" class="btn btn-pink" onclick="startQuickQuiz('favorite')" style="display:none;">⭐ 重點收藏 (<span id="favorite-count">0</span>)</button>
+                <button id="btn-mistake" class="btn btn-red" onclick="startQuiz('mistake')" style="display:none;">📕 實驗筆記 (<span id="mistake-count">0</span>)</button>
+                <button id="btn-favorite" class="btn btn-pink" onclick="startQuiz('favorite')" style="display:none;">⭐ 重點收藏 (<span id="favorite-count">0</span>)</button>
                 <button class="btn btn-blue" onclick="showCollection()">🧬 元素圖鑑</button>
                 <button class="btn btn-green" onclick="showHistory()">🏆 榮譽榜</button>
                 
@@ -910,8 +909,7 @@
         let quickCorrect = 0;
         let quickTotal = 0;
         let quickUserAnswers = {}; // 追蹤每一題的作答狀態 { qId: { correctCode, selectedCode, isCorrect } }
-        let currentQuickMode = 'all'; // 追蹤當前刷題模式 ('all', 'mistake', 'favorite')
-
+        
         let audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
         let audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
         
@@ -1157,6 +1155,8 @@
             const savedState = localStorage.getItem(getUserKey('standardState'));
             if (savedState) {
                 resumeContainer.style.display = 'block';
+                // 為了方便，可以在這裡顯示更多資訊，例如「單元 X - 第 N 題」
+                // 目前僅顯示按鈕
             } else {
                 resumeContainer.style.display = 'none';
             }
@@ -1229,7 +1229,6 @@
 
         function saveQuickState() {
             const state = {
-                mode: currentQuickMode,
                 correct: quickCorrect,
                 total: quickTotal,
                 answers: quickUserAnswers,
@@ -1469,45 +1468,19 @@
         // --- Quick Quiz Module (Waterfall) Logic ---
         
         function startQuickQuiz(mode) {
-            currentQuickMode = mode; // 設定當前模式
-
             // Check for saved state
             const savedStateStr = localStorage.getItem(getUserKey('quickState'));
             let resume = false;
-            
-            // 只有當儲存的模式與當前請求的模式相同時，才詢問是否恢復
             if (savedStateStr) {
-                const savedState = JSON.parse(savedStateStr);
-                if (savedState.mode === mode) {
-                    resume = confirm("發現上次未完成的刷題紀錄，是否繼續？\n(按「取消」將重新開始)");
-                }
+                resume = confirm("發現上次未完成的極速刷題紀錄，是否繼續？\n(按「取消」將重新開始)");
                 if (!resume) {
                     clearQuickState();
                 }
             }
 
-            // Setup data based on mode
-            let questionsToLoad = [];
-            let titleText = "";
-
-            if (mode === 'all') {
-                questionsToLoad = allQuestions;
-                titleText = "極速刷題 (全範圍)";
-            } else if (mode === 'mistake') {
-                let mistakeIds = getMistakeBank();
-                questionsToLoad = allQuestions.filter(q => mistakeIds.includes(q.id));
-                titleText = "極速刷題：實驗筆記";
-            } else if (mode === 'favorite') {
-                let favIds = getFavoriteBank();
-                questionsToLoad = allQuestions.filter(q => favIds.includes(q.id));
-                titleText = "極速刷題：重點收藏";
-            }
-
-            if(questionsToLoad.length === 0) {
-                let msg = mode === 'mistake' ? "目前沒有錯題紀錄！" : (mode === 'favorite' ? "目前沒有收藏題目！" : "目前無題目資料！");
-                alert(msg);
-                return;
-            }
+            // Setup data
+            let questionsToLoad = allQuestions; // Always all in this mode
+            if(questionsToLoad.length === 0) { alert("目前無題目資料！"); return; }
 
             // Initialize or Restore
             if (resume) {
@@ -1521,7 +1494,7 @@
                 quickUserAnswers = {};
             }
 
-            document.getElementById('quick-title').innerText = titleText;
+            document.getElementById('quick-title').innerText = `極速刷題 (全範圍)`;
             
             // UI Update
             document.getElementById('quick-score-val').innerText = quickCorrect;
@@ -1648,10 +1621,7 @@
             document.getElementById('quick-total-val').innerText = quickTotal;
 
             // Update Progress Bar
-            // Need to recalculate total based on current list (not just allQuestions, but filtered list)
-            // But getting filtered list length again is messy here.
-            // Simplified: count cards in DOM
-            let totalCards = document.querySelectorAll('.waterfall-card').length;
+            let totalCards = allQuestions.length;
             let percentage = (quickTotal / totalCards) * 100;
             document.getElementById('quick-progress-bar').style.width = percentage + "%";
         }
